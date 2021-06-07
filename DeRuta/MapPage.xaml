@@ -27,7 +27,7 @@
     </ContentPage>
     <ContentPage Title="Listado">
         <StackLayout>
-            <ListView x:Name="contacts">
+            <ListView x:Name="contactsList">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>

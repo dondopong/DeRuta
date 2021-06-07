@@ -29,19 +29,22 @@ namespace DeRuta
         double lng;
         bool moved = false;
         Pin myPin;
-        List<Pin> amigos = new List<Pin>();
-        List<Pin> lugares = new List<Pin>();
+        List<Pin> contactPins = new List<Pin>();
+        List<Pin> placesPins = new List<Pin>();
         byte[] resizedImage;
 
         public MapPage()
         {
             InitializeComponent();
+            user.Text = AppConstants.loggedUser.username;
+            avatar.Source = ImageSource.FromResource("DeRuta.Images.nopicture.png");
             LoadPicture();
+            GetAndShowPlaces();
+            GetContacts();
         }
 
         protected override void OnAppearing()
-        {
-            user.Text = AppConstants.loggedUser.username;
+        {            
             loc = DependencyService.Get<ILocation>();
             loc.locationObtained += (object sender,
                 ILocationEventArgs e) =>
@@ -66,13 +69,9 @@ namespace DeRuta
                     map.MoveToRegion(MapSpan.FromCenterAndRadius(new Position(lat, lng), Distance.FromMeters(5000)));
                     moved = true;
                 }
-                map.Cluster();
                 UpdateCoords();
             };          
             loc.ObtainMyLocation();
-            GetAndShowPlaces();
-            GetContacts();
-            map.Cluster();
         }
 
         private void LugaresButton_Clicked(object sender, EventArgs e)
@@ -80,7 +79,7 @@ namespace DeRuta
             lugaresButton.BackgroundColor = Color.LimeGreen;
             amigosButton.BackgroundColor = Color.LightGray;
             map.Pins.Clear();
-            foreach (Pin pin in lugares)
+            foreach (Pin pin in placesPins)
             {
                 map.Pins.Add(pin);
             }
@@ -95,7 +94,7 @@ namespace DeRuta
             amigosButton.BackgroundColor = Color.LimeGreen;
             lugaresButton.BackgroundColor = Color.LightGray;
             map.Pins.Clear();
-            foreach (Pin pin in amigos)
+            foreach (Pin pin in contactPins)
             {
                 map.Pins.Add(pin);
             }
@@ -122,39 +121,10 @@ namespace DeRuta
             }
             GetContacts();
         }
-        
-        private async void GetPlaces()
-        {
-            lugares.Clear();
-            var request = new HttpRequestMessage
-            {
-                RequestUri = new Uri("http://192.168.0.251:8080/place"),
-                Method = HttpMethod.Get
-            };
-            request.Headers.Add("Accept", "application/json");
-            request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AppConstants.loggedUser.username + ":" + AppConstants.loggedUser.password)));
-            var client = new HttpClient();
-            HttpResponseMessage response = await client.SendAsync(request);
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                string content = await response.Content.ReadAsStringAsync();
-                var resultado = JsonConvert.DeserializeObject<List<Place>>(content);
-                foreach (Place place in resultado)
-                {
-                    lugares.Add(new Pin()
-                    {
-                        Position = new Position(place.coordinates.latitude, place.coordinates.longitude),
-                        Label = place.name,
-                        Address = place.country,
-                        InfoWindowAnchor = new Point(0.5, 0)
-                    });
-                }
-            }
-        }
 
         private async void GetAndShowPlaces()
         {
-            lugares.Clear();
+            placesPins.Clear();
             var request = new HttpRequestMessage
             {
                 RequestUri = new Uri("http://192.168.0.251:8080/place"),
@@ -170,7 +140,7 @@ namespace DeRuta
                 var resultado = JsonConvert.DeserializeObject<List<Place>>(content);
                 foreach (Place place in resultado)
                 {
-                    lugares.Add(new Pin()
+                    placesPins.Add(new Pin()
                     {
                         Position = new Position(place.coordinates.latitude, place.coordinates.longitude),
                         Label = place.name,
@@ -178,7 +148,7 @@ namespace DeRuta
                         InfoWindowAnchor = new Point(0.5, 0)
                     });
                 }
-                foreach (Pin pin in lugares)
+                foreach (Pin pin in placesPins)
                 {
                     map.Pins.Add(pin);
                 }
@@ -187,7 +157,7 @@ namespace DeRuta
 
         private async void GetContacts()
         {
-            amigos.Clear();
+            contactPins.Clear();
             var request = new HttpRequestMessage
             {
                 RequestUri = new Uri("http://192.168.0.251:8080/user/contacts"),
@@ -201,16 +171,16 @@ namespace DeRuta
             {
                 string content = await response.Content.ReadAsStringAsync();
                 var resultado = JsonConvert.DeserializeObject<List<DataUser>>(content);
-                this.contacts.ItemsSource = resultado;
+                this.contactsList.ItemsSource = resultado;
                 foreach (DataUser contact in resultado)
                 {
                     if (contact.coordinates != null)
                     {
-                        amigos.Add(new Pin()
+                        contactPins.Add(new Pin()
                         {
                             Position = new Position(contact.coordinates.latitude, contact.coordinates.longitude),
                             Label = contact.username,
-                            InfoWindowAnchor = new Point(0.5, 0)
+                            InfoWindowAnchor = new Point(0.5, 0),
                             //Icon = BitmapDescriptorFactory.FromBundle("image01.png")
                         });
                     }
