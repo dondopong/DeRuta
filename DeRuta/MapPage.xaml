@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<TabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"             
+             xmlns:clustering="clr-namespace:Xamarin.Forms.GoogleMaps.Clustering;assembly=Xamarin.Forms.GoogleMaps.Clustering"
+             x:Class="DeRuta.MapPage">
+
+    <ContentPage Title="Perfil">
+        <StackLayout>
+            <Image x:Name="avatar" HorizontalOptions="Center" />
+            <Label x:Name="user" HorizontalOptions="Center" FontSize="Title"/>
+            <Button Text="Cambiar imagen" Clicked="CambiarImagenButton_Clicked" />
+            <Button Text="Tomar foto" Clicked="TomarFotoButton_Clicked" />
+            <Button Text="Guardar foto" Clicked="GuardarFotoButton_Clicked" />
+        </StackLayout>
+    </ContentPage>
+    <ContentPage Title="Lugares">
+        <StackLayout>
+            <clustering:ClusteredMap x:Name="map"
+                                 HorizontalOptions="FillAndExpand"
+                                 VerticalOptions="FillAndExpand">
+            </clustering:ClusteredMap>
+            <StackLayout Orientation="Horizontal">
+                <Button x:Name="lugaresButton" Text="Lugares" Clicked="LugaresButton_Clicked" BackgroundColor="LimeGreen" HorizontalOptions="FillAndExpand"/>
+                <Button x:Name="amigosButton" Text="Amigos" Clicked="AmigosButton_Clicked" BackgroundColor="LightGray" HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+        </StackLayout>
+    </ContentPage>
+    <ContentPage Title="Listado">
+        <StackLayout>
+            <ListView x:Name="contacts">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <StackLayout Orientation="Vertical">
+                                <Label Text="{Binding username}" HorizontalOptions="FillAndExpand"/>
+                            </StackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <Entry Placeholder="Contacto" x:Name="contacto"/>
+            <Button VerticalOptions="End"
+                    Text="Agregar Contacto" Clicked="AgregarContactoButton_Clicked"/>
+        </StackLayout>
+    </ContentPage>
+</TabbedPage>
