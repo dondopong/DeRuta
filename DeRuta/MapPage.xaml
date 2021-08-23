@@ -2,11 +2,23 @@
 <TabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"             
              xmlns:clustering="clr-namespace:Xamarin.Forms.GoogleMaps.Clustering;assembly=Xamarin.Forms.GoogleMaps.Clustering"
+             xmlns:controls="clr-namespace:ImageCircle.Forms.Plugin.Abstractions;assembly=ImageCircle.Forms.Plugin"
              x:Class="DeRuta.MapPage">
 
     <ContentPage Title="Perfil">
         <StackLayout>
-            <Image x:Name="avatar" HorizontalOptions="Center" />
+            <controls:CircleImage x:Name="avatar" HorizontalOptions="Center" Aspect="AspectFill">
+                <controls:CircleImage.WidthRequest>
+                    <OnPlatform x:TypeArguments="x:Double">
+                        <On Platform="Android, iOS">200</On>
+                    </OnPlatform>
+                </controls:CircleImage.WidthRequest>
+                <controls:CircleImage.HeightRequest>
+                    <OnPlatform x:TypeArguments="x:Double">
+                        <On Platform="Android, iOS">200</On>
+                    </OnPlatform>
+                </controls:CircleImage.HeightRequest>
+            </controls:CircleImage>
             <Label x:Name="user" HorizontalOptions="Center" FontSize="Title"/>
             <Button Text="Cambiar imagen" Clicked="CambiarImagenButton_Clicked" />
             <Button Text="Tomar foto" Clicked="TomarFotoButton_Clicked" />
@@ -17,8 +29,7 @@
         <StackLayout>
             <clustering:ClusteredMap x:Name="map"
                                  HorizontalOptions="FillAndExpand"
-                                 VerticalOptions="FillAndExpand">
-            </clustering:ClusteredMap>
+                                 VerticalOptions="FillAndExpand" />
             <StackLayout Orientation="Horizontal">
                 <Button x:Name="lugaresButton" Text="Lugares" Clicked="LugaresButton_Clicked" BackgroundColor="LimeGreen" HorizontalOptions="FillAndExpand"/>
                 <Button x:Name="amigosButton" Text="Amigos" Clicked="AmigosButton_Clicked" BackgroundColor="LightGray" HorizontalOptions="FillAndExpand"/>

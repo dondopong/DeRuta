@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
@@ -12,12 +10,10 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using DeRuta.Models;
 using DeRuta.Constants;
-using Xamarin.Forms.GoogleMaps.Clustering;
 using Xamarin.Essentials;
 using System.IO;
 using DeRuta.Utils;
-using System.Collections.ObjectModel;
-using Foundation;
+using ImageCircle.Forms.Plugin.Abstractions;
 
 namespace DeRuta
 {
@@ -32,8 +28,9 @@ namespace DeRuta
         List<Pin> contactPins = new List<Pin>();
         List<Pin> placesPins = new List<Pin>();
         byte[] resizedImage;
+        BitmapDescriptor myIcon;
 
-        public MapPage()
+public MapPage()
         {
             InitializeComponent();
             user.Text = AppConstants.loggedUser.username;
@@ -44,8 +41,29 @@ namespace DeRuta
         }
 
         protected override void OnAppearing()
-        {            
+        {
             loc = DependencyService.Get<ILocation>();
+            myPin = new Pin()
+            {
+                Type = PinType.Place,
+                Label = "You are here",
+                Rotation = 0f,
+                Tag = "id_here",
+                InfoWindowAnchor = new Point(0.5, 0),
+                Icon = BitmapDescriptorFactory.FromView(new ContentView
+                {
+                    HeightRequest = 100,
+                    WidthRequest = 100,
+                    Content = new Image
+                    {
+                        Aspect = Aspect.AspectFill,
+                        HeightRequest = 100,
+                        WidthRequest = 100,
+                        Source = ImageSource.FromUri(new Uri("https://cdn.image4.io/deruta/c_fit,w_150,h_150/avatars/" + AppConstants.loggedUser.username + ".png"))
+                    }
+                })
+                //Icon = await GetMyIcon()
+            };
             loc.locationObtained += (object sender,
                 ILocationEventArgs e) =>
             {
@@ -55,24 +73,18 @@ namespace DeRuta
                 {
                     map.Pins.Remove(myPin);
                 }
-                map.Pins.Add(myPin = new Pin()
-                {
-                    Type = PinType.Place,
-                    Label = "You are here",
-                    Rotation = 0f,
-                    Position = new Position(lat, lng),
-                    Tag = "id_here",
-                    InfoWindowAnchor = new Point(0.5, 0)
-                });
+                myPin.Position = new Position(lat, lng);
+                map.Pins.Add(myPin);
                 if (!moved)
                 {
                     map.MoveToRegion(MapSpan.FromCenterAndRadius(new Position(lat, lng), Distance.FromMeters(5000)));
                     moved = true;
                 }
                 UpdateCoords();
-            };          
+            };
             loc.ObtainMyLocation();
         }
+
 
         private void LugaresButton_Clicked(object sender, EventArgs e)
         {
@@ -103,7 +115,7 @@ namespace DeRuta
                 map.Pins.Add(myPin);
             }
         }
-        
+
         private async void AgregarContactoButton_Clicked(object sender, EventArgs e)
         {
             var request = new HttpRequestMessage
@@ -120,6 +132,46 @@ namespace DeRuta
                 contacto.Text = "";
             }
             GetContacts();
+        }
+
+        private async Task<BitmapDescriptor> GetMyIcon()
+        {
+            if (myIcon == null)
+            {
+                HttpRequestMessage request = new HttpRequestMessage
+                {
+                    RequestUri = new Uri("https://api.image4.io/v1.0/image?name=/avatars/" + AppConstants.loggedUser.username + ".png"),
+                    Method = HttpMethod.Get
+                };
+                request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AppConstants.Image4ioApiKey + ":" + AppConstants.Image4ioApiSecret)));
+                var client = new HttpClient();
+                HttpResponseMessage response = await client.SendAsync(request);
+                WebClient wc = new WebClient();
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    //byte[] originalData = wc.DownloadData("https://cdn.image4.io/deruta/c_fit,w_150,h_150/avatars/" + AppConstants.loggedUser.username + ".png");
+                    //MemoryStream stream = new MemoryStream(originalData);
+                    myIcon = BitmapDescriptorFactory.FromView(new ContentView
+                    {
+                        HeightRequest = 100,
+                        WidthRequest = 100,
+                        Content = new Image
+                        {
+                            Aspect = Aspect.AspectFill,
+                            HeightRequest = 100,
+                            WidthRequest = 100,
+                            Source = ImageSource.FromUri(new Uri("https://cdn.image4.io/deruta/c_fit,w_150,h_150/avatars/" + AppConstants.loggedUser.username + ".png"))
+                        }
+                    });
+                }
+                else
+                {
+                    byte[] originalData = wc.DownloadData("https://cdn.image4.io/deruta/c_fit,w_150,h_150/746615c2-4806-4651-bcdd-304051dc4c74.png");
+                    MemoryStream stream = new MemoryStream(originalData);
+                    myIcon = BitmapDescriptorFactory.FromStream(stream);
+                }
+            }
+            return myIcon;
         }
 
         private async void GetAndShowPlaces()
@@ -176,19 +228,59 @@ namespace DeRuta
                 {
                     if (contact.coordinates != null)
                     {
-                        contactPins.Add(new Pin()
+                        Pin p = new Pin()
                         {
                             Position = new Position(contact.coordinates.latitude, contact.coordinates.longitude),
                             Label = contact.username,
                             InfoWindowAnchor = new Point(0.5, 0),
-                            //Icon = BitmapDescriptorFactory.FromBundle("image01.png")
-                        });
-                    }
+                        };
+                        if (!contact.pictureUpdated)
+                        {
+                            request = new HttpRequestMessage
+                            {
+                                RequestUri = new Uri("https://api.image4.io/v1.0/image?name=/avatars/" + contact.username + ".png"),
+                                Method = HttpMethod.Get
+                            };
+                            request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AppConstants.Image4ioApiKey + ":" + AppConstants.Image4ioApiSecret)));
+                            response = await client.SendAsync(request);
+                            WebClient wc = new WebClient();
+                            if (response.StatusCode == HttpStatusCode.OK)
+                            {
+                                byte[] originalData = wc.DownloadData("https://cdn.image4.io/deruta/c_fit,w_150,h_150/avatars/" + contact.username + ".png");
+                                MemoryStream stream = new MemoryStream(originalData);
 
+                                var documentsPath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "temp");
+                                Directory.CreateDirectory(documentsPath);
+
+                                byte[] bArray = new byte[stream.Length];
+                                using (FileStream fs = new FileStream(Path.Combine(documentsPath, contact.username + ".png"), FileMode.OpenOrCreate))
+                                {
+                                    using (stream)
+                                    {
+                                        stream.Read(bArray, 0, (int)stream.Length);
+                                    }
+                                    int length = bArray.Length;
+                                    fs.Write(bArray, 0, length);
+                                }
+                            }
+                        }
+
+                        var filePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "temp", contact.username + ".png");
+                        if (File.Exists(filePath))
+                        {
+                            p.Icon = BitmapDescriptorFactory.FromStream(File.OpenRead(filePath));
+                        }
+                        else
+                        {
+                            p.Icon = BitmapDescriptorFactory.FromBundle("DeRuta.Images.nopic150.png");
+                        }
+
+                        contactPins.Add(p);
+                    }
                 }
             }
         }
-        
+
         private async void UpdateCoords()
         {
             Coordinates coordinates = new Coordinates()
@@ -209,7 +301,7 @@ namespace DeRuta
             var client = new HttpClient();
             await client.SendAsync(request);
         }
-        
+
         private async void CambiarImagenButton_Clicked(object sender, EventArgs e)
         {
             var result = await MediaPicker.PickPhotoAsync(new MediaPickerOptions
@@ -226,9 +318,7 @@ namespace DeRuta
                 imageData = ms.ToArray();
             }
 
-            resizedImage = ImageResizer.ResizeImage(imageData, 400);
-
-            avatar.Source = ImageSource.FromStream(() => new MemoryStream(resizedImage));
+            avatar.Source = Xamarin.Forms.ImageSource.FromStream(() => new MemoryStream(imageData));
         }
 
         private async void TomarFotoButton_Clicked(object sender, EventArgs e)
@@ -247,12 +337,9 @@ namespace DeRuta
                 imageData = ms.ToArray();
             }
 
-            resizedImage = ImageResizer.ResizeImage(imageData, 400);
+            resizedImage = ImageConverter.ResizeImage(imageData, 400);
 
-            avatar.Source = ImageSource.FromStream(() => new MemoryStream(resizedImage));
-
-
-
+            avatar.Source = Xamarin.Forms.ImageSource.FromStream(() => new MemoryStream(resizedImage));
 
             //avatar.Source = ImageSource.FromStream(() => stream);
         }
@@ -261,12 +348,11 @@ namespace DeRuta
         {
             if (resizedImage != null)
             {
-                
                 var request = new HttpRequestMessage
                 {
                     RequestUri = new Uri("https://api.image4.io/v1.0/uploadImage"),
                     Method = HttpMethod.Post,
-                    
+
                 };
                 request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AppConstants.Image4ioApiKey + ":" + AppConstants.Image4ioApiSecret)));
                 var content = new MultipartFormDataContent();
@@ -275,7 +361,7 @@ namespace DeRuta
                 content.Add(new StringContent("/avatars"), "path");
                 content.Add(new StreamContent(new MemoryStream(resizedImage)), "image", $"{AppConstants.loggedUser.username}.png");
                 request.Content = content;
-                
+
 
 
                 var client = new HttpClient();
@@ -303,9 +389,10 @@ namespace DeRuta
             var client = new HttpClient();
             HttpRequestMessage request = new HttpRequestMessage
             {
-                RequestUri = new Uri("https://cdn.image4.io/deruta/avatars/" + AppConstants.loggedUser.username + ".png"),
+                RequestUri = new Uri("https://api.image4.io/v1.0/image?name=/avatars/" + AppConstants.loggedUser.username + ".png"),
                 Method = HttpMethod.Get
             };
+            request.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes(AppConstants.Image4ioApiKey + ":" + AppConstants.Image4ioApiSecret)));
             HttpResponseMessage response = await client.SendAsync(request);
             if (response.StatusCode == HttpStatusCode.OK)
             {

@@ -12,16 +12,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\nopic150.png" />
     <None Remove="Images\nopicture.png" />
   </ItemGroup>
 
   <ItemGroup>
+	  <EmbeddedResource Include="Images\nopic150.png">
+		  <LogicalName>nopic150.png</LogicalName>
+	  </EmbeddedResource>
     <EmbeddedResource Include="Images\nopicture.png" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Xam.Plugin.Media" Version="5.0.1" />
+    <PackageReference Include="Xam.Plugins.Forms.ImageCircle" Version="3.0.0.5" />
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
     <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
     <PackageReference Include="Xamarin.Forms.GoogleMaps" Version="3.3.0" />
@@ -42,5 +47,9 @@
     <Compile Update="MainPage - Copia.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Custom\" />
   </ItemGroup>
 </Project>

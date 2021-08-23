@@ -1,14 +1,13 @@
-﻿using System;
-
+﻿
 using Android.App;
 using Android.Content.PM;
 using Android.Runtime;
 using Android.OS;
 using Plugin.CurrentActivity;
-using System.Net;
 using Xamarin.Forms;
 using Xamarin.Forms.GoogleMaps.Clustering;
 using Xamarin.Forms.GoogleMaps.Clustering.Android;
+using ImageCircle.Forms.Plugin.Droid;
 
 [assembly: ExportRenderer(typeof(ClusteredMap), typeof(ClusteredMapRenderer))]
 namespace DeRuta.Droid
@@ -23,6 +22,8 @@ namespace DeRuta.Droid
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
             Xamarin.FormsGoogleMaps.Init(this, savedInstanceState);
+            ImageCircleRenderer.Init();
+
             LoadApplication(new App());
         }
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)

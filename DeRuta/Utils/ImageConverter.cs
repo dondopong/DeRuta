@@ -1,8 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
-
-using System.Drawing;
 using UIKit;
 using CoreGraphics;
 
@@ -11,9 +8,9 @@ using Xamarin.Forms;
 
 namespace DeRuta.Utils
 {
-    public static class ImageResizer
+    public static class ImageConverter
     {
-        static ImageResizer()
+        static ImageConverter()
         {
         }
 

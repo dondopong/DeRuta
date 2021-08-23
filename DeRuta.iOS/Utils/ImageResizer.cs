@@ -1,9 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Threading.Tasks;
 
 #if __IOS__
-using System.Drawing;
 using UIKit;
 using CoreGraphics;
 #endif

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using DeRuta.Constants;
+﻿using DeRuta.Constants;
 using Foundation;
+using ImageCircle.Forms.Plugin.iOS;
 using UIKit;
 
 namespace DeRuta.iOS
@@ -25,6 +23,7 @@ namespace DeRuta.iOS
             global::Xamarin.Forms.Forms.Init();
             Xamarin.FormsGoogleMaps.Init(AppConstants.GoogleMapsApiKey);
             LoadApplication(new App());
+            ImageCircleRenderer.Init();
 
             return base.FinishedLaunching(app, options);
         }
